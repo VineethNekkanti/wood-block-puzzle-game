@@ -89,3 +89,5 @@ This project is open source and available under the MIT License.
 ---
 
 **Enjoy playing the Wood Block Puzzle game!** 🎉
+
+![CodeRabbit Pull Request Reviews](https://img.shields.io/coderabbit/prs/github/VineethNekkanti/wood-block-puzzle-game?utm_source=oss&utm_medium=github&utm_campaign=VineethNekkanti%2Fwood-block-puzzle-game&labelColor=171717&color=FF570A&link=https%3A%2F%2Fcoderabbit.ai&label=CodeRabbit+Reviews)
