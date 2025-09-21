@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wood Block Puzzle - Preview</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #8B4513 0%, #A0522D 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .game-container {
+            background: #A0522D;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            border: 3px solid #8B4513;
+            max-width: 400px;
+            width: 100%;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #FFF8DC;
+        }
+        
+        .title {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+        
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 15px;
+        }
+        
+        .stat {
+            text-align: center;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: #DEB887;
+            font-weight: 600;
+        }
+        
+        .stat-value {
+            font-size: 16px;
+            color: #FFF8DC;
+            font-weight: bold;
+            margin-top: 2px;
+        }
+        
+        .game-board {
+            width: 300px;
+            height: 300px;
+            background: #DEB887;
+            border-radius: 10px;
+            padding: 2px;
+            margin: 0 auto 20px;
+            border: 3px solid #8B4513;
+            display: grid;
+            grid-template-columns: repeat(10, 1fr);
+            grid-template-rows: repeat(10, 1fr);
+            gap: 1px;
+        }
+        
+        .cell {
+            background: #F5DEB3;
+            border-radius: 2px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .cell:hover {
+            background: #E6D3A3;
+        }
+        
+        .cell.filled {
+            background: #8B4513;
+            box-shadow: inset 0 0 5px rgba(0,0,0,0.3);
+        }
+        
+        .block-palette {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            background: #A0522D;
+            border-radius: 15px;
+            padding: 15px;
+            border: 2px solid #8B4513;
+            margin-bottom: 15px;
+        }
+        
+        .block {
+            width: 60px;
+            height: 60px;
+            background: #4ECDC4;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        
+        .block:hover {
+            transform: scale(1.1);
+        }
+        
+        .block.selected {
+            transform: scale(1.1);
+            box-shadow: 0 0 15px rgba(255,255,255,0.5);
+        }
+        
+        .block:nth-child(2) { background: #FF6B6B; }
+        .block:nth-child(3) { background: #45B7D1; }
+        
+        .instructions {
+            text-align: center;
+            color: #FFF8DC;
+            font-size: 14px;
+            margin-top: 15px;
+            line-height: 1.4;
+        }
+        
+        .reset-btn {
+            background: #CD853F;
+            color: #FFF8DC;
+            border: 2px solid #8B4513;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            margin: 10px auto;
+            display: block;
+            transition: background 0.2s;
+        }
+        
+        .reset-btn:hover {
+            background: #D2691E;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="header">
+            <div class="title">Wood Block Puzzle</div>
+            <div class="stats">
+                <div class="stat">
+                    <div class="stat-label">Score</div>
+                    <div class="stat-value" id="score">0</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-label">Level</div>
+                    <div class="stat-value" id="level">1</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-label">Lines</div>
+                    <div class="stat-value" id="lines">0</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="game-board" id="gameBoard">
+            <!-- Grid cells will be generated by JavaScript -->
+        </div>
+        
+        <div class="block-palette">
+            <div class="block" data-shape="I">I</div>
+            <div class="block" data-shape="O">O</div>
+            <div class="block" data-shape="T">T</div>
+        </div>
+        
+        <button class="reset-btn" onclick="resetGame()">Reset Game</button>
+        
+        <div class="instructions">
+            Click a block to select it, then click on the grid to place it.<br>
+            Fill complete rows or columns to clear them and score points!
+        </div>
+    </div>
+
+    <script>
+        // Game state
+        let grid = Array(10).fill(null).map(() => Array(10).fill(0));
+        let score = 0;
+        let level = 1;
+        let linesCleared = 0;
+        let selectedBlock = null;
+
+        // Block shapes
+        const blockShapes = {
+            I: [[1, 1, 1, 1]],
+            O: [[1, 1], [1, 1]],
+            T: [[0, 1, 0], [1, 1, 1]]
+        };
+
+        // Initialize game
+        function initGame() {
+            createGrid();
+            updateDisplay();
+        }
+
+        // Create grid cells
+        function createGrid() {
+            const gameBoard = document.getElementById('gameBoard');
+            gameBoard.innerHTML = '';
+            
+            for (let row = 0; row < 10; row++) {
+                for (let col = 0; col < 10; col++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    cell.dataset.row = row;
+                    cell.dataset.col = col;
+                    cell.onclick = () => placeBlock(row, col);
+                    gameBoard.appendChild(cell);
+                }
+            }
+        }
+
+        // Update display
+        function updateDisplay() {
+            document.getElementById('score').textContent = score;
+            document.getElementById('level').textContent = level;
+            document.getElementById('lines').textContent = linesCleared;
+            
+            // Update grid visual
+            const cells = document.querySelectorAll('.cell');
+            cells.forEach(cell => {
+                const row = parseInt(cell.dataset.row);
+                const col = parseInt(cell.dataset.col);
+                cell.classList.toggle('filled', grid[row][col] === 1);
+            });
+        }
+
+        // Place block
+        function placeBlock(row, col) {
+            if (!selectedBlock) return;
+            
+            const shape = blockShapes[selectedBlock];
+            const canPlace = canPlaceBlock(shape, row, col);
+            
+            if (canPlace) {
+                // Place the block
+                for (let r = 0; r < shape.length; r++) {
+                    for (let c = 0; c < shape[r].length; c++) {
+                        if (shape[r][c] && row + r < 10 && col + c < 10) {
+                            grid[row + r][col + c] = 1;
+                        }
+                    }
+                }
+                
+                // Clear lines
+                clearLines();
+                updateDisplay();
+                selectedBlock = null;
+                
+                // Update block selection visual
+                document.querySelectorAll('.block').forEach(b => b.classList.remove('selected'));
+            }
+        }
+
+        // Check if block can be placed
+        function canPlaceBlock(shape, row, col) {
+            for (let r = 0; r < shape.length; r++) {
+                for (let c = 0; c < shape[r].length; c++) {
+                    if (shape[r][c]) {
+                        const newRow = row + r;
+                        const newCol = col + c;
+                        if (newRow >= 10 || newCol >= 10 || grid[newRow][newCol] === 1) {
+                            return false;
+                        }
+                    }
+                }
+            }
+            return true;
+        }
+
+        // Clear complete lines
+        function clearLines() {
+            let cleared = 0;
+            
+            // Check rows
+            for (let row = 0; row < 10; row++) {
+                if (grid[row].every(cell => cell === 1)) {
+                    grid.splice(row, 1);
+                    grid.unshift(Array(10).fill(0));
+                    cleared++;
+                }
+            }
+            
+            // Check columns
+            for (let col = 0; col < 10; col++) {
+                if (grid.every(row => row[col] === 1)) {
+                    for (let row = 0; row < 10; row++) {
+                        grid[row][col] = 0;
+                    }
+                    cleared++;
+                }
+            }
+            
+            if (cleared > 0) {
+                score += cleared * 100 * level;
+                linesCleared += cleared;
+                level = Math.floor(linesCleared / 10) + 1;
+            }
+        }
+
+        // Reset game
+        function resetGame() {
+            grid = Array(10).fill(null).map(() => Array(10).fill(0));
+            score = 0;
+            level = 1;
+            linesCleared = 0;
+            selectedBlock = null;
+            updateDisplay();
+            
+            // Update block selection visual
+            document.querySelectorAll('.block').forEach(b => b.classList.remove('selected'));
+        }
+
+        // Block selection
+        document.querySelectorAll('.block').forEach(block => {
+            block.onclick = () => {
+                selectedBlock = block.dataset.shape;
+                document.querySelectorAll('.block').forEach(b => b.classList.remove('selected'));
+                block.classList.add('selected');
+            };
+        });
+
+        // Initialize game when page loads
+        window.onload = initGame;
+    </script>
+</body>
+</html>
